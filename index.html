@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Road-Music</title>
+    <link rel="preconnect" href="https://itunes.apple.com" />
+    <link rel="preconnect" href="https://lh3.googleusercontent.com" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Road-Music navigation">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <span class="note">♪</span>
+          </div>
+          <div>
+            <p class="brand-kicker">Road-Music</p>
+            <h1>Road-Music</h1>
+          </div>
+        </div>
+
+        <section class="user-card" aria-label="Signed in user">
+          <div class="avatar" id="userAvatar">R</div>
+          <div>
+            <p id="userName">Guest listener</p>
+            <span id="userEmail">Sign in to save playlists</span>
+          </div>
+        </section>
+
+        <div class="login-actions">
+          <a id="googleLogin" class="google-link" href="/auth/google">Sign in with Google</a>
+          <button id="demoLogin" type="button" class="outline-button">Use demo login</button>
+          <button id="logoutButton" type="button" class="ghost-button" hidden>Sign out</button>
+        </div>
+
+        <nav class="library" aria-label="Library">
+          <button class="nav-button active" type="button" data-view="searchView">Discover</button>
+          <button class="nav-button" type="button" data-view="playlistView">Playlists</button>
+          <button class="nav-button" type="button" data-view="queueView">Queue</button>
+        </nav>
+
+        <section class="playlist-quick" aria-label="Playlist summary">
+          <span>Saved songs</span>
+          <strong id="playlistCount">0</strong>
+        </section>
+      </aside>
+
+      <main class="main-panel">
+        <header class="hero">
+          <div class="hero-art" aria-hidden="true">
+            <div class="record">
+              <span>♪</span>
+            </div>
+            <div class="wave wave-left"></div>
+            <div class="wave wave-right"></div>
+          </div>
+          <div class="hero-copy">
+            <p>Neon road radio</p>
+            <h2>Road-Music</h2>
+          </div>
+        </header>
+
+        <section id="searchView" class="view active-view" aria-label="Search songs">
+          <div class="search-row">
+            <label class="search-box" for="searchInput">
+              <span>Search</span>
+              <input id="searchInput" type="search" placeholder="Try tere, arijit, love, drive..." autocomplete="off" />
+            </label>
+            <button id="searchButton" type="button" class="primary-button">Find Songs</button>
+          </div>
+          <div id="statusText" class="status">Search for songs, artists, albums, or moods.</div>
+          <div id="resultsGrid" class="track-grid" aria-live="polite"></div>
+        </section>
+
+        <section id="playlistView" class="view" aria-label="Saved playlists">
+          <div class="section-heading">
+            <div>
+              <p>Your saved road tapes</p>
+              <h3>Playlists</h3>
+            </div>
+          </div>
+          <form id="playlistForm" class="playlist-form">
+            <input id="playlistNameInput" type="text" placeholder="New playlist name" autocomplete="off" />
+            <button type="submit" class="primary-button">Create Playlist</button>
+          </form>
+          <div id="playlistTabs" class="playlist-tabs"></div>
+          <div class="section-heading compact-heading">
+            <div>
+              <p>Selected playlist</p>
+              <h3 id="activePlaylistName">Liked Songs</h3>
+            </div>
+            <button id="deletePlaylist" type="button" class="ghost-button">Delete Playlist</button>
+          </div>
+          <div id="playlistGrid" class="track-grid empty-grid"></div>
+        </section>
+
+        <section id="queueView" class="view" aria-label="Song queue">
+          <div class="section-heading">
+            <div>
+              <p>Up next</p>
+              <h3>Queue</h3>
+            </div>
+            <button id="clearQueue" type="button" class="ghost-button">Clear Queue</button>
+          </div>
+          <div id="queueGrid" class="track-grid empty-grid"></div>
+        </section>
+      </main>
+
+      <footer class="player" aria-label="Music player">
+        <div class="now-playing">
+          <img id="playerArt" src="" alt="" hidden />
+          <div>
+            <strong id="playerTitle">Choose a song</strong>
+            <span id="playerArtist">Road-Music player is ready</span>
+          </div>
+        </div>
+
+        <div class="controls">
+          <button id="prevButton" class="icon-button" type="button" aria-label="Previous song">‹</button>
+          <button id="playButton" class="play-button" type="button" aria-label="Play or pause">▶</button>
+          <button id="nextButton" class="icon-button" type="button" aria-label="Next song">›</button>
+        </div>
+
+        <div class="progress-wrap">
+          <span id="currentTime">0:00</span>
+          <input id="progress" type="range" min="0" max="100" value="0" aria-label="Song progress" />
+          <span id="duration">0:00</span>
+        </div>
+
+        <audio id="audioPlayer"></audio>
+      </footer>
+    </div>
+
+    <template id="trackTemplate">
+      <article class="track-card">
+        <button class="art-button" type="button">
+          <img class="track-art" alt="" />
+          <span class="play-chip">▶</span>
+        </button>
+        <div class="track-body">
+          <h4></h4>
+          <p></p>
+        </div>
+        <div class="track-actions">
+          <button type="button" class="mini-button save-button">Save</button>
+          <button type="button" class="mini-button queue-button">Queue</button>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>

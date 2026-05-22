@@ -1,0 +1,82 @@
+[
+  {
+    "id": "bairan",
+    "title": "Bairan",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/bairan.mp3"
+  },
+  {
+    "id": "chak-de-india-title-song",
+    "title": "Chak De India Title Song",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/chak-de-india-title-song.mp3"
+  },
+  {
+    "id": "gun-gun-guna",
+    "title": "Gun Gun Guna",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/gun-gun-guna.mp3"
+  },
+  {
+    "id": "kashish",
+    "title": "Kashish",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/kashish.mp3"
+  },
+  {
+    "id": "main-rang-sharbaton-ka",
+    "title": "Main Rang Sharbaton Ka",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/main-rang-sharbaton-ka.mp3"
+  },
+  {
+    "id": "tu-chahiye",
+    "title": "Tu Chahiye",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/tu-chahiye.mp3"
+  },
+  {
+    "id": "tu-jaane-na",
+    "title": "Tu Jaane Na",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/tu-jaane-na.mp3"
+  },
+  {
+    "id": "tum-jo-aaye",
+    "title": "Tum Jo Aaye",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/tum-jo-aaye.mp3"
+  },
+  {
+    "id": "tum-se-hi",
+    "title": "Tum Se Hi",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/tum-se-hi.mp3"
+  },
+  {
+    "id": "vaaroon",
+    "title": "Vaaroon",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/vaaroon.mp3"
+  }
+]
