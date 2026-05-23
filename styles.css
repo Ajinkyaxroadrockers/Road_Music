@@ -69,33 +69,22 @@ p {
   transition: grid-template-columns 260ms ease;
 }
 
-.sidebar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  grid-row: 1 / 3;
-  min-height: 100vh;
-  padding: 1.25rem;
-  border-right: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(21, 12, 35, 0.84), rgba(9, 6, 17, 0.78));
-  backdrop-filter: blur(22px);
-  box-shadow: 18px 0 60px rgba(0, 0, 0, 0.28);
-  transform: translateX(0);
-  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+body.sidebar-collapsed .app-shell {
+  grid-template-columns: 0 minmax(0, 1fr);
 }
 
 .sidebar-toggle {
   position: fixed;
   top: 1rem;
   left: 1rem;
-  z-index: 40;
-  display: none;
+  z-index: 80;
+  display: grid;
   width: 2.75rem;
   height: 2.75rem;
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 0.5rem;
-  background: rgba(16, 10, 28, 0.82);
+  background: rgba(16, 10, 28, 0.86);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
 }
@@ -108,6 +97,28 @@ p {
   border-radius: 99px;
   background: var(--text);
   transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  grid-row: 1 / 3;
+  min-height: 100vh;
+  width: 18rem;
+  padding: 4.4rem 1.25rem 1.25rem;
+  border-right: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(21, 12, 35, 0.9), rgba(9, 6, 17, 0.82));
+  backdrop-filter: blur(22px);
+  box-shadow: 18px 0 60px rgba(0, 0, 0, 0.28);
+  transform: translateX(0);
+  transition: transform 300ms cubic-bezier(0.22, 1, 0.36, 1), opacity 220ms ease;
+}
+
+body.sidebar-collapsed .sidebar {
+  opacity: 0;
+  transform: translateX(-105%);
+  pointer-events: none;
 }
 
 .brand,
@@ -168,6 +179,38 @@ h1 {
   border-radius: 0.5rem;
   background: rgba(255, 255, 255, 0.06);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.user-card > div:last-child {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.user-card p,
+.user-card span {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-card p {
+  font-weight: 850;
+}
+
+.user-card span,
+.status,
+.track-body p,
+.now-playing span,
+.modal-copy {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.user-card span {
+  font-size: 0.82rem;
 }
 
 .avatar {
@@ -187,19 +230,6 @@ h1 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.user-card p {
-  font-weight: 850;
-}
-
-.user-card span,
-.status,
-.track-body p,
-.now-playing span,
-.modal-copy {
-  color: var(--muted);
-  font-size: 0.88rem;
 }
 
 .login-actions,
@@ -282,45 +312,48 @@ h1 {
   border: 1px solid var(--line);
   border-radius: 0.5rem;
   background:
-    linear-gradient(130deg, rgba(47, 17, 67, 0.9), rgba(13, 8, 24, 0.92)),
-    radial-gradient(circle at 80% 30%, rgba(255, 159, 67, 0.24), transparent 22rem);
+    linear-gradient(90deg, rgba(19, 6, 31, 0.96) 0%, rgba(31, 8, 45, 0.76) 38%, rgba(7, 5, 13, 0.42) 100%),
+    url("assets/hero-wave-bg.png") center / cover no-repeat;
   box-shadow: var(--shadow);
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 18% 42%, rgba(255, 63, 156, 0.22), transparent 22rem),
+    radial-gradient(circle at 72% 48%, rgba(94, 234, 212, 0.16), transparent 26rem),
+    linear-gradient(90deg, rgba(9, 6, 17, 0.78), rgba(9, 6, 17, 0.2), rgba(9, 6, 17, 0.7));
+  pointer-events: none;
 }
 
 .hero::after {
   content: "";
   position: absolute;
   inset: auto 0 0;
-  height: 5rem;
-  background: linear-gradient(0deg, rgba(9, 6, 17, 0.86), transparent);
+  height: 5.5rem;
+  background: linear-gradient(0deg, rgba(9, 6, 17, 0.92), transparent);
+  pointer-events: none;
 }
 
 .hero-art {
-  position: absolute;
-  inset: 0;
-}
-
-.hero-art img {
-  position: absolute;
-  top: 50%;
-  right: 4%;
-  width: min(34rem, 68vw);
-  max-height: 145%;
-  object-fit: contain;
-  filter: drop-shadow(0 0 34px rgba(255, 63, 156, 0.36));
-  transform: translateY(-50%);
+  display: none;
 }
 
 .hero-copy {
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  max-width: 52rem;
 }
 
 .hero-copy h2 {
   max-width: 12ch;
-  font-size: clamp(2.8rem, 7vw, 6rem);
+  font-size: clamp(3rem, 7vw, 6.3rem);
   line-height: 0.95;
-  text-shadow: 0 0 25px rgba(255, 63, 156, 0.28);
+  text-shadow:
+    0 0 26px rgba(255, 63, 156, 0.3),
+    0 6px 40px rgba(0, 0, 0, 0.55);
 }
 
 .view {
@@ -636,6 +669,10 @@ h1 {
   transition: left 260ms ease;
 }
 
+body.sidebar-collapsed .player {
+  left: 0;
+}
+
 .now-playing {
   gap: 0.8rem;
   min-width: 0;
@@ -806,12 +843,9 @@ input[type="range"] {
 }
 
 @media (max-width: 860px) {
-  .app-shell {
+  .app-shell,
+  body.sidebar-collapsed .app-shell {
     grid-template-columns: 1fr;
-  }
-
-  .sidebar-toggle {
-    display: block;
   }
 
   .sidebar {
@@ -821,14 +855,15 @@ input[type="range"] {
     border-right: 1px solid var(--line);
   }
 
-  body.sidebar-collapsed .sidebar {
-    opacity: 0;
-    transform: translateX(-105%);
-    pointer-events: none;
-  }
-
   .main-panel {
     padding: 4.2rem 0.95rem 11.5rem;
+  }
+
+  .hero {
+    min-height: 14rem;
+    background:
+      linear-gradient(90deg, rgba(14, 5, 24, 0.94), rgba(14, 5, 24, 0.62)),
+      url("assets/hero-wave-bg.png") center / cover no-repeat;
   }
 
   .player {
@@ -861,10 +896,8 @@ input[type="range"] {
     min-height: 13.5rem;
   }
 
-  .hero-art img {
-    right: -22%;
-    width: 28rem;
-    opacity: 0.72;
+  .hero-copy h2 {
+    font-size: clamp(2.45rem, 15vw, 4rem);
   }
 
   .track-grid {
