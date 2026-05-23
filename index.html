@@ -9,14 +9,20 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-label="Toggle navigation" aria-expanded="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
     <div class="app-shell">
-      <aside class="sidebar" aria-label="Road-Music navigation">
+      <aside id="sidebar" class="sidebar" aria-label="Road-Music navigation">
         <div class="brand">
           <div class="brand-mark" aria-hidden="true">
-            <span class="note">♪</span>
+            <span class="note">&#9834;</span>
           </div>
-          <div>
-            <p class="brand-kicker">Road-Music</p>
+          <div class="brand-copy">
+            <p class="brand-kicker">Neon radio</p>
             <h1>Road-Music</h1>
           </div>
         </div>
@@ -36,28 +42,28 @@
         </div>
 
         <nav class="library" aria-label="Library">
-          <button class="nav-button active" type="button" data-view="searchView">Discover</button>
-          <button class="nav-button" type="button" data-view="playlistView">Playlists</button>
-          <button class="nav-button" type="button" data-view="queueView">Queue</button>
+          <button class="nav-button active" type="button" data-view="searchView">
+            <span class="nav-icon" aria-hidden="true">&#8981;</span>
+            <span>Discover</span>
+          </button>
+          <button class="nav-button" type="button" data-view="playlistView">
+            <span class="nav-icon" aria-hidden="true">&#9835;</span>
+            <span>Playlists</span>
+          </button>
+          <button class="nav-button" type="button" data-view="queueView">
+            <span class="nav-icon" aria-hidden="true">&#9776;</span>
+            <span>Queue</span>
+          </button>
         </nav>
-
-        <section class="playlist-quick" aria-label="Playlist summary">
-          <span>Saved songs</span>
-          <strong id="playlistCount">0</strong>
-        </section>
       </aside>
 
       <main class="main-panel">
         <header class="hero">
           <div class="hero-art" aria-hidden="true">
-            <div class="record">
-              <span>♪</span>
-            </div>
-            <div class="wave wave-left"></div>
-            <div class="wave wave-right"></div>
+            <img src="assets/default-track-avatar.png" alt="" />
           </div>
           <div class="hero-copy">
-            <p>Neon road radio</p>
+            <p>Dark purple soundscape</p>
             <h2>Road-Music</h2>
           </div>
         </header>
@@ -77,22 +83,22 @@
         <section id="playlistView" class="view" aria-label="Saved playlists">
           <div class="section-heading">
             <div>
-              <p>Your saved road tapes</p>
+              <p>Your library</p>
               <h3>Playlists</h3>
             </div>
+            <button id="openCreatePlaylist" type="button" class="primary-button create-playlist-button">+ Create Playlist</button>
           </div>
-          <form id="playlistForm" class="playlist-form">
-            <input id="playlistNameInput" type="text" placeholder="New playlist name" autocomplete="off" />
-            <button type="submit" class="primary-button">Create Playlist</button>
-          </form>
-          <div id="playlistTabs" class="playlist-tabs"></div>
+
+          <div id="playlistTabs" class="playlist-tabs" aria-label="Playlist list"></div>
+
           <div class="section-heading compact-heading">
             <div>
               <p>Selected playlist</p>
-              <h3 id="activePlaylistName">Liked Songs</h3>
+              <h3 id="activePlaylistName">No playlist selected</h3>
             </div>
-            <button id="deletePlaylist" type="button" class="ghost-button">Delete Playlist</button>
+            <button id="deletePlaylist" type="button" class="danger-button">Delete Playlist</button>
           </div>
+
           <div id="playlistGrid" class="track-grid empty-grid"></div>
         </section>
 
@@ -110,7 +116,7 @@
 
       <footer class="player" aria-label="Music player">
         <div class="now-playing">
-          <img id="playerArt" src="" alt="" hidden />
+          <img id="playerArt" src="assets/default-track-avatar.png" alt="" />
           <div>
             <strong id="playerTitle">Choose a song</strong>
             <span id="playerArtist">Road-Music player is ready</span>
@@ -118,9 +124,9 @@
         </div>
 
         <div class="controls">
-          <button id="prevButton" class="icon-button" type="button" aria-label="Previous song">‹</button>
-          <button id="playButton" class="play-button" type="button" aria-label="Play or pause">▶</button>
-          <button id="nextButton" class="icon-button" type="button" aria-label="Next song">›</button>
+          <button id="prevButton" class="icon-button previous-icon" type="button" aria-label="Previous song"></button>
+          <button id="playButton" class="play-button play-icon" type="button" aria-label="Play"></button>
+          <button id="nextButton" class="icon-button next-icon" type="button" aria-label="Next song"></button>
         </div>
 
         <div class="progress-wrap">
@@ -133,16 +139,65 @@
       </footer>
     </div>
 
+    <div id="modalBackdrop" class="modal-backdrop" hidden>
+      <section id="playlistCreateModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="createPlaylistTitle" hidden>
+        <div class="modal-heading">
+          <p>New mix</p>
+          <h3 id="createPlaylistTitle">Create Playlist</h3>
+        </div>
+
+        <form id="playlistForm" class="playlist-form">
+          <label for="playlistNameInput">Playlist name</label>
+          <input id="playlistNameInput" type="text" placeholder="Late night drive" autocomplete="off" />
+          <div id="playlistNameError" class="form-error" role="alert"></div>
+
+          <div class="modal-actions">
+            <button type="button" class="ghost-button modal-close">Cancel</button>
+            <button type="submit" class="primary-button">Create</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="choosePlaylistModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="choosePlaylistTitle" hidden>
+        <div class="modal-heading">
+          <p>Save song</p>
+          <h3 id="choosePlaylistTitle">Choose playlist</h3>
+        </div>
+
+        <div id="choosePlaylistList" class="choose-playlist-list"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost-button modal-close">Cancel</button>
+        </div>
+      </section>
+
+      <section id="deletePlaylistModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="deletePlaylistTitle" hidden>
+        <div class="modal-heading">
+          <p>Delete playlist</p>
+          <h3 id="deletePlaylistTitle">Are you sure you want to delete this playlist?</h3>
+        </div>
+
+        <p class="modal-copy">This removes the playlist only. Your song catalog and other playlists stay untouched.</p>
+
+        <div class="modal-actions">
+          <button type="button" class="ghost-button modal-close">Cancel</button>
+          <button id="confirmDeletePlaylist" type="button" class="danger-button">Delete</button>
+        </div>
+      </section>
+    </div>
+
     <template id="trackTemplate">
       <article class="track-card">
-        <button class="art-button" type="button">
+        <button class="art-button" type="button" aria-label="Play song">
           <img class="track-art" alt="" />
-          <span class="play-chip">▶</span>
+          <span class="play-chip" aria-hidden="true"></span>
         </button>
+
         <div class="track-body">
           <h4></h4>
           <p></p>
         </div>
+
         <div class="track-actions">
           <button type="button" class="mini-button save-button">Save</button>
           <button type="button" class="mini-button queue-button">Queue</button>
