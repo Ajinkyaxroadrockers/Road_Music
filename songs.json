@@ -78,5 +78,262 @@
     "album": "",
     "artwork": "",
     "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/vaaroon.mp3"
+  },
+  {
+    "id": "Apna-Bana-Le",
+    "title": "Apna Bana Le",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Apna-Bana-Le.mp3"
+  },
+  {
+    "id": "Arz-Kiya-Hai",
+    "title": "Arz Kiya Hai",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Arz-Kiya-Hai.mp3"
+  },
+  {
+    "id": "PASSO-BEM-SOLTO",
+    "title": "PASSO BEM SOLTO",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/PASSO-BEM-SOLTO.mp3"
+  },
+  {
+    "id": "Bye",
+    "title": "Bye",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Bye.mp3"
+  },
+  {
+    "id": "Chaudhary",
+    "title": "Chaudhary",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Chaudhary.mp3"
+  },
+  {
+    "id": "Dil-Lagana-Mana-Tha",
+    "title": "Dil Lagana Mana Tha",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Dil-Lagana-Mana-Tha.mp3"
+  },
+  {
+    "id": "Haaye-Re",
+    "title": "Haaye Re",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Haaye-Re.mp3"
+  },
+  {
+    "id": "Ham-Tere-Pyar-Mein",
+    "title": "Ham Tere Pyar Mein",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Ham-Tere-Pyar-Mein.mp3"
+  },
+  {
+    "id": "Ishq-Jalakar",
+    "title": "Ishq Jalakar",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Ishq-Jalakar.mp3"
+  },
+  {
+    "id": "Jiya-Lage-Na",
+    "title": "Jiya Lage Na",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Jiya-Lage-Na.mp3"
+  },
+  {
+    "id": "Kajra-Re",
+    "title": "Kajra Re",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Kajra-Re.mp3"
+  },
+  {
+    "id": "Kanha-Thumri",
+    "title": "Kanha Thumri",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Kanha-Thumri.mp3"
+  },
+  {
+    "id": "Kesariya",
+    "title": "Kesariya",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Kesariya.mp3"
+  },
+  {
+    "id": "Lat-Lag-Gayee",
+    "title": "Lat Lag Gayee",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Lat-Lag-Gayee.mp3"
+  },
+  {
+    "id": "Mast-Magan",
+    "title": "Mast Magan",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Mast-Magan.mp3"
+  },
+  {
+    "id": "Mere-Samnewali-Khidki-Mein",
+    "title": "Mere Samnewali Khidki Mein",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Mere-Samnewali-Khidki-Mein.mp3"
+  },
+  {
+    "id": "Mitwa",
+    "title": "Mitwa",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Mitwa.mp3"
+  },
+  {
+    "id": "MONTAGEM-TOMADA",
+    "title": "MONTAGEM TOMADA",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/MONTAGEM TOMADA.mp3"
+  },
+  {
+    "id": "My-Queen",
+    "title": "My Queen",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/My-Queen.mp3"
+  },
+  {
+    "id": "NO-BATIDO",
+    "title": "NO BATIDO",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/NO-BATIDO.mp3"
+  },
+  {
+    "id": "O-Rangrez",
+    "title": "O Rangrez",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/O-Rangrez.mp3"
+  },
+  {
+    "id": "O-Meri-Laila",
+    "title": "O Meri Laila",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/O-Meri-Laila.mp3"
+  },
+  {
+    "id": "Raanjhanaa",
+    "title": "Raanjhanaa",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Raanjhanaa.mp3"
+  },
+  {
+    "id": "MONTAGEM-PEGADORA",
+    "title": "MONTAGEM PEGADORA",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/MONTAGEM-PEGADORA.mp3"
+  },
+  {
+    "id": "Shararat",
+    "title": "Shararat",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Shararat.mp3"
+  },
+  {
+    "id": "Sheesha",
+    "title": "Sheesha",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Sheesha.mp3"
+  },
+  {
+    "id": "Subha-Hone-Na-De",
+    "title": "Subha Hone Na De",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Subha-Hone-Na-De.mp3"
+  },
+  {
+    "id": "Tere-Liye",
+    "title": "Tere Liye",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Tere-Liye.mp3"
+  },
+  {
+    "id": "Tu-Hi-Mera",
+    "title": "Tu Hi Mera",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Tu-Hi-Mera.mp3"
+  },
+  {
+    "id": "Tu-Meri",
+    "title": "Tu Meri",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Tu-Meri.mp3"
+  },
+  {
+    "id": "Tum-Hi-Ho-Bandhu",
+    "title": "Tum Hi Ho Bandhu",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Tum-Hi-Ho-Bandhu.mp3"
+  },
+  {
+    "id": "Tum-Se",
+    "title": "Tum Se",
+    "artist": "",
+    "album": "",
+    "artwork": "",
+    "audioUrl": "https://eszvgvmjipexicnobjqz.supabase.co/storage/v1/object/public/songs/audio/Tum-Se.mp3"
   }
+  
 ]
