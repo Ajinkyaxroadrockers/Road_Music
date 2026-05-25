@@ -395,18 +395,20 @@ function addToQueue(track) {
 async function playTrack(track, list = state.results, index = 0) {
   const playStartedAt = performance.now();
   const playRequestId = state.playRequestId + 1;
+  const playbackTrack = { ...track };
   state.playRequestId = playRequestId;
-  console.log("[player] selected track", track);
+  console.log("[player] clicked track title", playbackTrack.title);
+  console.log("[player] clicked track id", playbackTrack.id);
 
-  if (state.currentTrack?.id !== track.id && state.currentTrack) {
+  if (state.currentTrack?.id !== playbackTrack.id && state.currentTrack) {
     state.history.push(state.currentTrack);
   }
 
-  state.currentTrack = track;
+  state.currentTrack = playbackTrack;
   state.currentList = list;
   state.currentIndex = index;
-  updatePlayer(track);
-  els.statusText.textContent = `Loading "${track.title}"...`;
+  updatePlayer(playbackTrack);
+  els.statusText.textContent = `Loading "${playbackTrack.title}"...`;
 
   const isBadPlaybackUrl = (audioUrl) => {
     const value = String(audioUrl || "").toLowerCase();
@@ -421,13 +423,13 @@ async function playTrack(track, list = state.results, index = 0) {
 
   const resolveFromBackend = async (attempt = 0) => {
     const params = new URLSearchParams({
-      id: track.id || "",
+      id: playbackTrack.id || "",
       attempt: String(attempt),
       t: String(Date.now()),
-      title: track.title || "",
-      artist: track.artist || "",
-      sourceUrl: track.sourceUrl || "",
-      query: track.query || `${track.title || ""} ${track.artist || ""}`.trim(),
+      title: playbackTrack.title || "",
+      artist: playbackTrack.artist || "",
+      sourceUrl: playbackTrack.sourceUrl || "",
+      query: playbackTrack.query || `${playbackTrack.title || ""} ${playbackTrack.artist || ""}`.trim(),
     });
     const response = await fetch(`/api/resolve?${params.toString()}`, { cache: "no-store" });
     if (!response.ok) throw new Error(`Resolve failed at attempt ${attempt}`);
@@ -436,9 +438,10 @@ async function playTrack(track, list = state.results, index = 0) {
       console.warn("[player] rejected non-playable url", data.audioUrl);
       throw new Error(`Unsupported resolved URL at attempt ${attempt}`);
     }
+    console.log("[player] resolved title", playbackTrack.title);
     console.log("[player] final playable url", data.audioUrl);
     console.log("[player] mime guess", data.audioUrl);
-    track.audioUrl = data.audioUrl;
+    playbackTrack.audioUrl = data.audioUrl;
     return data.audioUrl;
   };
 
@@ -456,26 +459,29 @@ async function playTrack(track, list = state.results, index = 0) {
     els.audio.load();
     await els.audio.play();
     console.log(`[player] playback start duration ${((performance.now() - playStartedAt) / 1000).toFixed(2)}s`);
+    console.log("[player] final playback title", playbackTrack.title);
   };
 
   try {
-    const audioUrl = !isBadPlaybackUrl(track.audioUrl) ? track.audioUrl : await resolveFromBackend(0);
+    const audioUrl = !isBadPlaybackUrl(playbackTrack.audioUrl) ? playbackTrack.audioUrl : await resolveFromBackend(0);
     await playUrl(audioUrl);
     if (playRequestId !== state.playRequestId) return;
-    updatePlayer(track);
+    state.currentTrack = playbackTrack;
+    updatePlayer(playbackTrack);
     renderAllTrackLists();
   } catch (firstError) {
     console.error("[player] playback failed", firstError, els.audio.error);
     try {
-      track.audioUrl = "";
+      playbackTrack.audioUrl = "";
       const fallbackUrl = await resolveFromBackend(1);
       await playUrl(fallbackUrl);
       if (playRequestId !== state.playRequestId) return;
-      updatePlayer(track);
+      state.currentTrack = playbackTrack;
+      updatePlayer(playbackTrack);
       renderAllTrackLists();
     } catch (fallbackError) {
       console.error("[player] fallback playback failed", fallbackError, els.audio.error);
-      track.audioUrl = "";
+      playbackTrack.audioUrl = "";
       els.statusText.textContent = "This song could not be played right now.";
       renderAllTrackLists();
     }

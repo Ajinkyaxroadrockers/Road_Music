@@ -45,6 +45,7 @@ BAD_RESULT_WORDS = (
     "nightcore",
     "slowed",
     "reverb",
+    "slowed reverb",
     "remix",
     "lofi",
     "sped up",
@@ -53,10 +54,16 @@ BAD_RESULT_WORDS = (
     "karaoke",
     "instrumental",
     "cover",
+    "reaction",
+    "fan edit",
+    "live",
+    "teaser",
+    "clip",
+    "short",
     "mashup",
     "8d",
 )
-PREFERRED_WORDS = ("official", "audio", "video", "lyrics", "topic", "vevo")
+PREFERRED_WORDS = ("official", "official audio", "official music video", "topic", "records", "vevo")
 POPULAR_ARTISTS = (
     "arijit singh",
     "imagine dragons",
@@ -68,6 +75,8 @@ POPULAR_ARTISTS = (
     "charlie puth",
     "sia",
     "alan walker",
+    "sabrina carpenter",
+    "farruko",
 )
 SEARCH_HINTS = {
     "believer": "Believer Imagine Dragons",
@@ -75,6 +84,7 @@ SEARCH_HINTS = {
     "tum hi ho": "Tum Hi Ho Arijit Singh",
     "kesariya": "Kesariya Arijit Singh",
     "blinding lights": "Blinding Lights The Weeknd",
+    "on my way sabrina": "On My Way Alan Walker Sabrina Carpenter Farruko",
 }
 TRENDING_QUERIES = [
     "Believer Imagine Dragons official audio",
@@ -208,6 +218,15 @@ def normalize(value):
     return " ".join(str(value or "").lower().split())
 
 
+def normalized_tokens(value):
+    cleaned = re.sub(r"[^a-z0-9]+", " ", str(value or "").lower())
+    return [token for token in cleaned.split() if token]
+
+
+def token_set(value):
+    return set(normalized_tokens(value))
+
+
 def cached(cache_key, factory):
     now = time.time()
     with _cache_lock:
@@ -325,30 +344,53 @@ def thumbnail_for(entry):
 
 def result_score(entry, query):
     title, artist = split_title_artist(entry)
-    haystack = normalize(f"{entry.get('title')} {entry.get('uploader')} {entry.get('channel')} {entry.get('artist')}")
+    raw_title = entry.get("title") or ""
+    uploader = entry.get("uploader") or entry.get("channel") or ""
+    haystack = normalize(f"{raw_title} {uploader} {entry.get('artist')} {artist}")
     query_text = normalize(query)
+    query_tokens = token_set(query_text)
+    title_tokens = token_set(title)
+    artist_tokens = token_set(artist)
+    haystack_tokens = token_set(haystack)
     score = 0
-    if all(word in haystack for word in query_text.split()[:5]):
+
+    if query_tokens and query_tokens.issubset(haystack_tokens):
+        score += 60
+    if query_tokens and title_tokens and title_tokens.issubset(query_tokens | artist_tokens):
         score += 20
-    if normalize(title) == query_text:
-        score += 18
+    if normalize(title) == query_text or normalize(f"{title} {artist}") == query_text:
+        score += 45
     if query_text and query_text in normalize(f"{title} {artist}"):
-        score += 14
+        score += 30
+
+    overlap = len(query_tokens & haystack_tokens)
+    score += overlap * 8
+    if query_tokens:
+        score += int((overlap / len(query_tokens)) * 30)
+    score += len(query_tokens & artist_tokens) * 14
+
     artist_text = normalize(artist)
     for known_artist in POPULAR_ARTISTS:
         if known_artist in query_text:
-            score += 35 if known_artist in artist_text else -10
+            score += 45 if known_artist in artist_text or known_artist in haystack else -20
     if "@" in title:
         score -= 12
-    if len(title) > len(query) * 1.6:
+    if len(title) > max(24, len(query) * 1.8):
         score -= 8
-    score += sum(4 for word in PREFERRED_WORDS if word in haystack)
-    score -= sum(30 for word in BAD_RESULT_WORDS if word in haystack)
+
+    score += sum(12 for word in PREFERRED_WORDS if word in haystack)
+    title_haystack = normalize(raw_title)
+    score -= sum(55 for word in BAD_RESULT_WORDS if word in title_haystack)
+    score -= sum(25 for word in BAD_RESULT_WORDS if word in haystack and word not in title_haystack)
+
     duration = entry.get("duration") or 0
     if duration and (duration < 75 or duration > 780):
         score -= 18
-    if entry.get("uploader", "").endswith(" - Topic"):
-        score += 10
+    uploader_text = normalize(uploader)
+    if uploader_text.endswith(" - topic") or "topic" in uploader_text:
+        score += 18
+    if any(word in uploader_text for word in ("records", "vevo", "official")):
+        score += 16
     return score
 
 
@@ -392,7 +434,7 @@ def clean_track_result(entry, query=""):
         "artwork": thumbnail_for(entry),
         "audioUrl": "",
         "sourceUrl": source_url,
-        "query": normalize_track_name(query or f"{title} {artist}"),
+        "query": normalize_track_name(f"{title} {artist}"),
     }
     _track_lookup[track["id"]] = track
     return track
@@ -429,11 +471,13 @@ def search_dynamic_songs(query):
         tracks = []
         seen = set()
         for entry in entries:
-            if result_score(entry, term) < -10:
+            score = result_score(entry, search_term)
+            if score < 20:
                 continue
             track = clean_track_result(entry, term)
             if not track or track["id"] in seen:
                 continue
+            track["confidence"] = score
             seen.add(track["id"])
             tracks.append(track)
         return tracks[:MAX_RESULTS]
