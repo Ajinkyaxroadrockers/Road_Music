@@ -13,6 +13,7 @@ const state = {
   currentList: [],
   currentIndex: -1,
   pendingSaveTrack: null,
+  playRequestId: 0,
 };
 
 const els = {
@@ -163,7 +164,7 @@ async function restoreUser() {
 async function searchSongs(query) {
   const term = normalize(query || DEFAULT_SEARCH);
 
-  els.statusText.textContent = term ? `Searching for "${term}"...` : "Loading all songs...";
+  els.statusText.textContent = term ? `Searching for "${term}"...` : "Loading trending songs...";
   els.resultsGrid.innerHTML = "";
 
   try {
@@ -174,11 +175,13 @@ async function searchSongs(query) {
     renderTrackGrid(
       els.resultsGrid,
       state.results,
-      "No full songs found in the cloud catalog. Add songs to songs.json or your cloud storage catalog."
+      "No songs found right now. Try another title or artist."
     );
-    els.statusText.textContent = `${state.results.length} full song${state.results.length === 1 ? "" : "s"} found.`;
+    els.statusText.textContent = term
+      ? `${state.results.length} song${state.results.length === 1 ? "" : "s"} found.`
+      : `${state.results.length} trending song${state.results.length === 1 ? "" : "s"} loaded.`;
   } catch {
-    els.statusText.textContent = "Could not reach the Road-Music catalog.";
+    els.statusText.textContent = "Could not reach the Road-Music music search.";
   }
 }
 
@@ -224,7 +227,7 @@ function renderAllTrackLists() {
   renderTrackGrid(
     els.resultsGrid,
     state.results,
-    "No full songs found in the cloud catalog. Add songs to songs.json or your cloud storage catalog."
+    "No songs found right now. Try another title or artist."
   );
   const active = getActivePlaylist();
   renderTrackGrid(els.playlistGrid, active?.tracks || [], "This playlist is empty. Search for a song and press Save.");
@@ -308,30 +311,65 @@ function renderQueue() {
   renderTrackGrid(els.queueGrid, state.queue, "Your queue is empty. Search for a song and press Queue.");
 }
 
+function metadataOnlyTrack(track) {
+  return {
+    id: track.id,
+    title: track.title,
+    artist: track.artist || "Unknown artist",
+    album: track.album || "",
+    artwork: track.artwork || "",
+    audioUrl: "",
+    sourceUrl: track.sourceUrl || "",
+    query: track.query || `${track.title || ""} ${track.artist || ""}`.trim(),
+  };
+}
+
+async function resolvePlayableUrl(track) {
+  if (track.audioUrl && els.audio.src === track.audioUrl) {
+    return track.audioUrl;
+  }
+
+  const params = new URLSearchParams({
+    id: track.id || "",
+    title: track.title || "",
+    artist: track.artist || "",
+    sourceUrl: track.sourceUrl || "",
+    query: track.query || `${track.title || ""} ${track.artist || ""}`.trim(),
+  });
+  const response = await fetch(`/api/resolve?${params.toString()}`);
+  if (!response.ok) throw new Error("Resolve failed");
+  const data = await response.json();
+  if (!data.audioUrl) throw new Error("No playable stream");
+  track.audioUrl = data.audioUrl;
+  return data.audioUrl;
+}
+
 function saveSongToPlaylist(track) {
   if (!state.user) {
     els.statusText.textContent = "Sign in first so Road-Music knows where to save your playlists.";
     return;
   }
 
+  const savedTrack = metadataOnlyTrack(track);
+
   if (state.playlists.length === 0) {
-    state.pendingSaveTrack = track;
-    openCreatePlaylistModal(`Create a playlist first, then save "${track.title}".`);
+    state.pendingSaveTrack = savedTrack;
+    openCreatePlaylistModal(`Create a playlist first, then save "${savedTrack.title}".`);
     return;
   }
 
   if (state.playlists.length === 1) {
-    addTrackToPlaylist(track, state.playlists[0]);
+    addTrackToPlaylist(savedTrack, state.playlists[0]);
     return;
   }
 
-  state.pendingSaveTrack = track;
-  openChoosePlaylistModal(track);
+  state.pendingSaveTrack = savedTrack;
+  openChoosePlaylistModal(savedTrack);
 }
 
 function addTrackToPlaylist(track, playlist) {
   if (!playlist.tracks.some((item) => item.id === track.id)) {
-    playlist.tracks.unshift(track);
+    playlist.tracks.unshift(metadataOnlyTrack(track));
     els.statusText.textContent = `"${track.title}" saved to ${playlist.name}.`;
   } else {
     els.statusText.textContent = `"${track.title}" is already in ${playlist.name}.`;
@@ -345,7 +383,7 @@ function addTrackToPlaylist(track, playlist) {
 
 function addToQueue(track) {
   if (!state.queue.some((item) => item.id === track.id)) {
-    state.queue.push(track);
+    state.queue.push(metadataOnlyTrack(track));
     els.statusText.textContent = `"${track.title}" added to queue.`;
   } else {
     els.statusText.textContent = `"${track.title}" is already in your queue.`;
@@ -355,10 +393,10 @@ function addToQueue(track) {
 }
 
 async function playTrack(track, list = state.results, index = 0) {
-  if (!track.audioUrl) {
-    els.statusText.textContent = "This song does not have an audio URL in the catalog.";
-    return;
-  }
+  const playStartedAt = performance.now();
+  const playRequestId = state.playRequestId + 1;
+  state.playRequestId = playRequestId;
+  console.log("[player] selected track", track);
 
   if (state.currentTrack?.id !== track.id && state.currentTrack) {
     state.history.push(state.currentTrack);
@@ -367,14 +405,80 @@ async function playTrack(track, list = state.results, index = 0) {
   state.currentTrack = track;
   state.currentList = list;
   state.currentIndex = index;
-  els.audio.src = track.audioUrl;
+  updatePlayer(track);
+  els.statusText.textContent = `Loading "${track.title}"...`;
+
+  const isBadPlaybackUrl = (audioUrl) => {
+    const value = String(audioUrl || "").toLowerCase();
+    return (
+      !value ||
+      value.includes(".m3u8") ||
+      value.includes("sndcdn.com/playlist") ||
+      value.includes("cf-hls-media.sndcdn.com") ||
+      value.includes("manifest")
+    );
+  };
+
+  const resolveFromBackend = async (attempt = 0) => {
+    const params = new URLSearchParams({
+      id: track.id || "",
+      attempt: String(attempt),
+      t: String(Date.now()),
+      title: track.title || "",
+      artist: track.artist || "",
+      sourceUrl: track.sourceUrl || "",
+      query: track.query || `${track.title || ""} ${track.artist || ""}`.trim(),
+    });
+    const response = await fetch(`/api/resolve?${params.toString()}`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Resolve failed at attempt ${attempt}`);
+    const data = await response.json();
+    if (!data.audioUrl || isBadPlaybackUrl(data.audioUrl)) {
+      console.warn("[player] rejected non-playable url", data.audioUrl);
+      throw new Error(`Unsupported resolved URL at attempt ${attempt}`);
+    }
+    console.log("[player] final playable url", data.audioUrl);
+    console.log("[player] mime guess", data.audioUrl);
+    track.audioUrl = data.audioUrl;
+    return data.audioUrl;
+  };
+
+  const playUrl = async (audioUrl) => {
+    if (playRequestId !== state.playRequestId) return;
+    if (isBadPlaybackUrl(audioUrl)) {
+      throw new Error("Unsupported playback URL");
+    }
+
+    els.audio.pause();
+    els.audio.removeAttribute("src");
+    els.audio.src = "";
+    els.audio.load();
+    els.audio.src = audioUrl;
+    els.audio.load();
+    await els.audio.play();
+    console.log(`[player] playback start duration ${((performance.now() - playStartedAt) / 1000).toFixed(2)}s`);
+  };
 
   try {
-    await els.audio.play();
+    const audioUrl = !isBadPlaybackUrl(track.audioUrl) ? track.audioUrl : await resolveFromBackend(0);
+    await playUrl(audioUrl);
+    if (playRequestId !== state.playRequestId) return;
     updatePlayer(track);
     renderAllTrackLists();
-  } catch {
-    els.statusText.textContent = "The browser could not play this song URL. Check cloud CORS/public access.";
+  } catch (firstError) {
+    console.error("[player] playback failed", firstError, els.audio.error);
+    try {
+      track.audioUrl = "";
+      const fallbackUrl = await resolveFromBackend(1);
+      await playUrl(fallbackUrl);
+      if (playRequestId !== state.playRequestId) return;
+      updatePlayer(track);
+      renderAllTrackLists();
+    } catch (fallbackError) {
+      console.error("[player] fallback playback failed", fallbackError, els.audio.error);
+      track.audioUrl = "";
+      els.statusText.textContent = "This song could not be played right now.";
+      renderAllTrackLists();
+    }
   }
 }
 
@@ -428,7 +532,13 @@ function togglePlay() {
   }
 
   if (els.audio.paused) {
-    els.audio.play();
+    if (!els.audio.src && state.currentTrack) {
+      playTrack(state.currentTrack, state.currentList, state.currentIndex);
+      return;
+    }
+    els.audio.play().catch(() => {
+      if (state.currentTrack) playTrack(state.currentTrack, state.currentList, state.currentIndex);
+    });
   } else {
     els.audio.pause();
   }
@@ -552,6 +662,10 @@ function wireEvents() {
   });
 
   els.audio.addEventListener("ended", playNext);
+
+  els.audio.addEventListener("error", () => {
+    console.error("[player] audio element error", els.audio.error);
+  });
 
   els.audio.addEventListener("pause", () => {
     setPlayButtonState(false);
