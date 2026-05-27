@@ -945,7 +945,20 @@ class RoadMusicHandler(SimpleHTTPRequestHandler):
 
         if parsed.path == "/api/songs":
             query = parse_qs(parsed.query).get("q", [""])[0]
-            songs = search_dynamic_songs(query) if normalize(query) else get_trending_songs()
+            if normalize(query):
+                songs = search_dynamic_songs(query)
+            else:
+                # Prefer static catalog (local `songs.json`) first so default view
+                # includes playable direct `audioUrl`s. Append trending dynamic
+                # results afterwards while deduplicating by id.
+                trending = get_trending_songs()
+                static = load_static_songs()
+                seen = set()
+                songs = []
+                for item in (static + trending):
+                    if item.get("id") and item["id"] not in seen:
+                        songs.append(item)
+                        seen.add(item["id"])
             songs = hydrate_cached_audio_urls(songs)
             prefetch_playable_streams(songs)
             self.send_json({"songs": songs})
