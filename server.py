@@ -42,28 +42,58 @@ RESOLVE_CACHE_SECONDS = 600
 PREFETCH_LIMIT = 8
 MAX_RESULTS = 48
 BAD_RESULT_WORDS = (
+    "acoustic",
+    "bass boosted",
+    "cover",
+    "cover song",
+    "dance mix",
+    "edit",
+    "fan edit",
+    "female version",
+    "instrumental",
+    "karaoke",
+    "live",
+    "lofi",
+    "lyric",
+    "lyrics",
+    "male version",
+    "mashup",
     "nightcore",
+    "reprise",
+    "reaction",
+    "remaster",
+    "remastered",
+    "remix",
     "slowed",
     "reverb",
     "slowed reverb",
-    "remix",
-    "lofi",
     "sped up",
     "speed up",
-    "bass boosted",
-    "karaoke",
-    "instrumental",
-    "cover",
-    "reaction",
-    "fan edit",
-    "live",
+    "status",
     "teaser",
-    "clip",
     "short",
-    "mashup",
+    "tiktok",
+    "tribute",
+    "unplugged",
+    "whatsapp",
     "8d",
 )
 PREFERRED_WORDS = ("official", "official audio", "official music video", "topic", "records", "vevo")
+OFFICIAL_CHANNEL_WORDS = (
+    "official",
+    "vevo",
+    "records",
+    "music",
+    "label",
+    "topic",
+    "t-series",
+    "sonymusic",
+    "sony music",
+    "zeemusic",
+    "zee music",
+    "saregama",
+    "yrf",
+)
 POPULAR_ARTISTS = (
     "arijit singh",
     "imagine dragons",
@@ -146,6 +176,7 @@ _resolver_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 _track_lookup = {}
 _browser_cookies_available = None
 _youtube_blocked_until = 0
+_static_song_cache = None
 
 
 class QuietYtdlpLogger:
@@ -227,6 +258,28 @@ def token_set(value):
     return set(normalized_tokens(value))
 
 
+def contains_bad_result_word(value):
+    text = f" {normalize(value)} "
+    compact = re.sub(r"[^a-z0-9]+", " ", text)
+    return any(f" {word} " in compact for word in BAD_RESULT_WORDS)
+
+
+def official_channel_score(entry):
+    uploader = normalize(f"{entry.get('uploader')} {entry.get('channel')} {entry.get('creator')}")
+    score = sum(10 for word in OFFICIAL_CHANNEL_WORDS if word in uploader)
+    if uploader.endswith(" - topic") or " - topic " in f" {uploader} ":
+        score += 30
+    if "vevo" in uploader:
+        score += 24
+    return score
+
+
+def loose_query_overlap(query_tokens, value):
+    compact = re.sub(r"[^a-z0-9]+", "", normalize(value))
+    value_tokens = token_set(value)
+    return sum(1 for token in query_tokens if token in value_tokens or token in compact)
+
+
 def cached(cache_key, factory):
     now = time.time()
     with _cache_lock:
@@ -238,6 +291,60 @@ def cached(cache_key, factory):
     with _cache_lock:
         _cache[cache_key] = {"time": now, "value": value}
     return value
+
+
+def load_static_songs():
+    global _static_song_cache
+    if _static_song_cache is not None:
+        return _static_song_cache
+
+    songs_path = ROOT / "songs.json"
+    try:
+        songs = json.loads(songs_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        songs = []
+
+    cleaned = []
+    for song in songs:
+        title = normalize_track_name(song.get("title") or "")
+        artist = normalize_track_name(song.get("artist") or "") if song.get("artist") else "Unknown artist"
+        audio_url = song.get("audioUrl") or ""
+        if not title or not is_direct_media_url(audio_url):
+            continue
+        track = {
+            "id": song.get("id") or make_track_id(title, artist, audio_url),
+            "title": title,
+            "artist": artist,
+            "album": song.get("album") or "",
+            "artwork": song.get("artwork") or "",
+            "audioUrl": audio_url,
+            "sourceUrl": "",
+            "query": normalize_track_name(f"{title} {artist}"),
+        }
+        _track_lookup[track["id"]] = track
+        cleaned.append(track)
+
+    _static_song_cache = cleaned
+    return _static_song_cache
+
+
+def search_static_songs(query="", limit=MAX_RESULTS):
+    songs = load_static_songs()
+    query_text = normalize_track_name(query)
+    if not normalize(query_text):
+        return songs[:limit]
+
+    query_tokens = token_set(query_text)
+
+    def score(song):
+        haystack = normalize(f"{song.get('title')} {song.get('artist')} {song.get('album')}")
+        haystack_tokens = token_set(haystack)
+        if query_tokens and query_tokens.issubset(haystack_tokens):
+            return 100 + len(query_tokens)
+        return loose_query_overlap(query_tokens, haystack) * 20
+
+    ranked = sorted(songs, key=score, reverse=True)
+    return [song for song in ranked if score(song) > 0][:limit]
 
 
 def resolver_cache_key(track_query):
@@ -380,18 +487,46 @@ def result_score(entry, query):
 
     score += sum(12 for word in PREFERRED_WORDS if word in haystack)
     title_haystack = normalize(raw_title)
-    score -= sum(55 for word in BAD_RESULT_WORDS if word in title_haystack)
-    score -= sum(25 for word in BAD_RESULT_WORDS if word in haystack and word not in title_haystack)
+    if contains_bad_result_word(title_haystack):
+        score -= 120
+    if contains_bad_result_word(haystack) and not contains_bad_result_word(title_haystack):
+        score -= 45
 
     duration = entry.get("duration") or 0
     if duration and (duration < 75 or duration > 780):
         score -= 18
     uploader_text = normalize(uploader)
-    if uploader_text.endswith(" - topic") or "topic" in uploader_text:
-        score += 18
-    if any(word in uploader_text for word in ("records", "vevo", "official")):
-        score += 16
+    score += official_channel_score(entry)
     return score
+
+
+def is_original_candidate(entry, query, min_score=35):
+    if not entry:
+        return False
+
+    raw_title = entry.get("title") or ""
+    uploader = entry.get("uploader") or entry.get("channel") or ""
+    haystack = normalize(f"{raw_title} {uploader} {entry.get('artist')} {entry.get('creator')}")
+    query_tokens = token_set(query)
+    haystack_tokens = token_set(haystack)
+    title, artist = split_title_artist(entry)
+    title_artist_tokens = token_set(f"{title} {artist}")
+
+    if contains_bad_result_word(raw_title):
+        return False
+    if query_tokens and loose_query_overlap(query_tokens, haystack) < min(2, len(query_tokens)):
+        return False
+    if query_tokens and loose_query_overlap(query_tokens, f"{title} {artist}") == 0:
+        return False
+    if result_score(entry, query) < min_score:
+        return False
+
+    # YouTube is full of playable copies. Prefer the artist/topic/label upload surface.
+    label = source_label(entry.get("webpage_url") or entry.get("url") or "")
+    if label == "youtube" and official_channel_score(entry) <= 0 and "official" not in haystack:
+        return False
+
+    return True
 
 
 def ydl_search(search_query, limit=12, source="ytsearch"):
@@ -472,7 +607,7 @@ def search_dynamic_songs(query):
         seen = set()
         for entry in entries:
             score = result_score(entry, search_term)
-            if score < 20:
+            if not is_original_candidate(entry, search_term, min_score=35):
                 continue
             track = clean_track_result(entry, term)
             if not track or track["id"] in seen:
@@ -480,7 +615,9 @@ def search_dynamic_songs(query):
             track["confidence"] = score
             seen.add(track["id"])
             tracks.append(track)
-        return tracks[:MAX_RESULTS]
+        if tracks:
+            return tracks[:MAX_RESULTS]
+        return search_static_songs(term)
 
     return cached(("search", normalize(term)), factory)
 
@@ -493,7 +630,10 @@ def get_trending_songs():
         def fetch_one(seed):
             entries = ydl_search(seed, 3, "ytsearch")
             entries = sorted(entries, key=lambda item: result_score(item, seed), reverse=True)
-            return clean_track_result(entries[0], seed) if entries else clean_seed_result(seed)
+            for entry in entries:
+                if is_original_candidate(entry, seed, min_score=30):
+                    return clean_track_result(entry, seed)
+            return clean_seed_result(seed)
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
             futures = [executor.submit(fetch_one, seed) for seed in TRENDING_QUERIES]
@@ -507,6 +647,9 @@ def get_trending_songs():
                         break
             except concurrent.futures.TimeoutError:
                 pass
+
+        if not tracks:
+            tracks.extend(search_static_songs("", MAX_RESULTS))
 
         for seed in TRENDING_QUERIES:
             if len(tracks) >= MAX_RESULTS:
@@ -637,10 +780,6 @@ def extract_stream_with_options(candidate, options):
 
 
 def resolve_audio_stream(track_query, attempt=0, use_cache=True):
-    if yt_dlp is None:
-        print("[resolve] yt-dlp is not installed")
-        return ""
-
     started = time.time()
     cache_key = resolver_cache_key(track_query)
     if use_cache and int(attempt or 0) == 0:
@@ -652,19 +791,32 @@ def resolve_audio_stream(track_query, attempt=0, use_cache=True):
     candidates = []
     source_url = track_query.get("sourceUrl", "")
     query = track_query.get("query") or f"{track_query.get('title', '')} {track_query.get('artist', '')}".strip()
-    if source_url:
-        candidates.append(source_url)
+    direct_audio_url = track_query.get("audioUrl", "")
+    if is_direct_media_url(direct_audio_url):
+        set_cached_stream(cache_key, direct_audio_url, "static-catalog", {"id": track_query.get("id", "")})
+        print(f"[resolver] static catalog hit")
+        print(f"[resolver] resolve duration {time.time() - started:.2f}s")
+        return direct_audio_url
+
+    if yt_dlp is None:
+        print("[resolve] yt-dlp is not installed")
+        return ""
 
     for search_term, source, limit in (
-        (f"{query} official audio", "ytsearch", 2),
-        (f"{query} official video", "ytsearch", 1),
-        (query, "scsearch", 6),
+        (f"{query} official audio", "ytsearch", 5),
+        (f"{query} official video", "ytsearch", 3),
     ):
         if source == "ytsearch" and youtube_is_blocked():
             continue
         entries = ydl_search(search_term, limit, source)
         entries = sorted(entries, key=lambda item: result_score(item, query), reverse=True)
-        candidates.extend(entry.get("webpage_url") or entry.get("url") for entry in entries if entry)
+        candidates.extend(
+            entry.get("webpage_url") or entry.get("url")
+            for entry in entries
+            if is_original_candidate(entry, query, min_score=35)
+        )
+    if source_url:
+        candidates.append(source_url)
 
     options = {
         "quiet": True,
@@ -726,10 +878,7 @@ def resolve_audio_stream(track_query, attempt=0, use_cache=True):
         print(f"[resolver] resolve duration {time.time() - started:.2f}s")
         return ""
 
-    for source, search_term in (
-        ("ytsearch2", f"{query} official audio"),
-        ("scsearch8", query),
-    ):
+    for source, search_term in (("ytsearch5", f"{query} official audio"),):
         if source.startswith("ytsearch") and youtube_is_blocked():
             continue
         print(f"[resolve] trying direct search extraction: {source}:{search_term}")
@@ -738,9 +887,11 @@ def resolve_audio_stream(track_query, attempt=0, use_cache=True):
                 info = ydl.extract_info(f"{source}:{search_term}", download=False)
             entries = sorted((info or {}).get("entries") or [], key=lambda item: result_score(item, query), reverse=True)
             for entry in entries:
+                if not is_original_candidate(entry, query, min_score=35):
+                    continue
                 stream_url = stream_from_entry(entry or {})
                 if stream_url:
-                    cache_source = "soundcloud-search" if source.startswith("scsearch") else "youtube-search"
+                    cache_source = "youtube-search"
                     set_cached_stream(cache_key, stream_url, cache_source, {"search": search_term})
                     print(f"[resolve] success direct stream from {cache_source} extraction")
                     print("[resolver] resolve duration {0:.2f}s".format(time.time() - started))
@@ -807,6 +958,7 @@ class RoadMusicHandler(SimpleHTTPRequestHandler):
                 attempt = int(params.get("attempt", ["0"])[0] or 0)
             except ValueError:
                 attempt = 0
+            load_static_songs()
             track = dict(_track_lookup.get(track_id, {}))
             track.update(
                 {
